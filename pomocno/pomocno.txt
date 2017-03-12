@@ -1,0 +1,171 @@
+$veza->beginTransaction();		
+
+
+			//UPDATE VINARIJA
+		$izraz=$veza->prepare("UPDATE vinarija
+			set 
+			naziv=:naziv		
+			where id=:id");
+		$izraz->execute(array(
+				
+				"id"=>$_POST["id"]
+				
+			));
+			
+			//print_r($_POST);
+			//exit;
+
+			//UPDATE BOJA VINA
+		$izraz=$veza->prepare("UPDATE boja_vina
+								set
+								boja=:boja
+								
+								where id=:id	
+							 ");
+		$izraz->execute(array(
+				
+				"id"=>$_POST["id"]
+			));
+
+
+			//Update vina
+		$izraz=$veza->prepare("UPDATE vina
+			SET 		
+			sorta_vina=:sorta_vina,
+			zapremnina=:zapremnina,
+			kvaliteta_vina=:kvaliteta_vina,
+			stanje_skladista=:stanje_skladista,
+			postotak_alkohola=:postotak_alkohola,
+			godina_berbe=:godina_berbe,
+			slika=:slika,
+			opis=:opis,
+			cijena=:cijena
+			WHERE id=:id
+			");
+
+
+		$izraz->execute(array(			
+				"id"=>$_POST["id"],					
+				"sorta_vina"=>$_POST["sorta_vina"],
+				"zapremnina"=>$_POST["zapremnina"],
+				"kvaliteta_vina"=>$_POST["kvaliteta_vina"],
+				"stanje_skladista"=>$_POST["stanje_skladista"],
+				"postotak_alkohola"=>$_POST["postotak_alkohola"],
+				"godina_berbe"=>$_POST["godina_berbe"],
+				"slika"=>$_POST["slika"],
+				"opis"=>$_POST["opis"],
+				"cijena"=>$_POST["cijena"]
+				)
+			);
+		$veza->commit();
+
+
+
+$_POST["lozinka"]=trim($_POST["lozinka"]);
+if(strlen($_POST["lozinka"])==0){
+	$poruka["lozinka"]="Lozina je obavezna";
+	return;
+}
+$_POST["lozinkaponovno"]=trim($_POST["lozinkaponovno"]);
+if(strlen($_POST["lozinkaponovno"])==0){
+	$poruka["lozinkaponovno"]="Ponovljena lozinka je obavezna";
+	return;
+}
+
+if(trim($_POST["lozinkaponovno"])!=trim($_POST["lozinka"])){
+	$poruka["lozinkaponovno"]="Lozinke ne odgovaraju";
+	return;
+}
+
+$_POST["ziroracun"]=trim($_POST["ziroracun"]);
+if(strlen($_POST["ziroracun"])==0){
+	$poruka["ziroracun"]="Žiroračun osobe je obavezan! ";
+	return;
+}
+
+$izraz=$veza->prepare("SELECT * FROM osoba where ziroracun=:ziroracun");
+	$ziroracun=$_POST['ziroracun'];
+	$izraz->bindParam(":ziroracun",$ziroracun);
+	$izraz->execute();
+	$osoba=$izraz->fetch(PDO::FETCH_OBJ);
+	if($osoba!=null)
+	{
+		$poruka["ziroracun"]="Žiroračun je zauzet, molimo vas  odaberite drugi!";
+		return;
+	}
+
+
+
+
+
+
+	<?php
+include_once '../../config.php';
+if (!isset($_SESSION["autoriziran"]) || $_SESSION["autoriziran"] -> uloga != "administrator") {
+	header("location: ../../index.php");
+	
+}
+
+
+if(!isset($_GET["id"]) && !isset($_POST["id"])){
+	header("location: ../../logout.php");
+	exit;
+}
+
+include_once 'funkcijaunos.php';
+$poruka=array();
+
+if(isset($_GET["id"])){
+	if (!is_numeric($_GET["id"])){
+		header("location: ../../logout.php");
+	//print_r(is_numeric($_GET["id"]));
+		exit;
+	}	
+	$izraz=$veza->prepare("select * from osoba where id=:id");
+	$izraz->execute($_GET);
+	$_POST = $izraz->fetch(PDO::FETCH_ASSOC);	
+}
+if(isset($_POST["promjeni"])){
+	
+	$nacin="update";	
+	include_once 'kontrolaunos.php';
+	
+	if(count($poruka)==0){
+		
+		
+		unset($_POST["dodaj"]);
+		$izraz=$veza->prepare("UPDATE  osoba
+		set 
+		oib=:oib,
+		ime=:ime,
+		prezime=:prezime,
+		adresa=:adresa,
+		mjesto=:mjesto,
+		telefon=:telefon,
+		mobitel=:mobitel,
+		email=:email,
+
+	
+		where id=:id");
+
+		$izraz->bindParam("id",$_POST["id"]);
+		$izraz->bindParam("oib",$_POST["oib"]);
+		$izraz->bindParam("ime",$_POST["ime"]);
+		$izraz->bindParam("prezime",$_POST["prezime"]);
+		$izraz->bindParam("adresa",$_POST["adresa"]);
+		$izraz->bindParam("mjesto",$_POST["mjesto"]);
+		$izraz->bindParam("telefon",$_POST["telefon"]);
+		
+		$izraz->bindParam("mobitel",$_POST["mobitel"]);
+		$izraz->bindParam("email",$_POST["email"]);
+		
+		
+	
+		
+		
+		$izraz->execute();
+		header("location: index.php");
+	}
+}
+
+
